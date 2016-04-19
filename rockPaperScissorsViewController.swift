@@ -11,47 +11,53 @@ import Foundation
 
 class rockPaperScissorsViewController: UIViewController {
     
+    @IBOutlet weak var rockButton: UIButton!
+    @IBOutlet weak var paperButton: UIButton!
+    @IBOutlet weak var scissorsButton: UIButton!
     
+    var history = [RPSMatch]()
     
-    @IBAction private func rockButton(sender: UIButton){
+    @IBAction func makeYourMove(sender: UIButton) {
         
-        
-        let controller = self.storyboard?.instantiateViewControllerWithIdentifier("ResultsViewController") as! ResultsViewController
-        
-        
-        controller.userChoice = getUserShape(sender)
-        
-        presentViewController(controller, animated: true, completion: nil)
-        
-        
-    }
-    
-    
-    @IBAction private func paperButton(sender: UIButton){
-        
-        
-        performSegueWithIdentifier("play", sender: sender)
-        
-        
-        
-    }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        
-        if segue.identifier == "play" {
-            let controller = segue.destinationViewController as! ResultsViewController
-            controller.userChoice = getUserShape(sender as! UIButton)
+        switch (sender) {
+        case self.rockButton:
+            throwDown(RPS.Rock)
             
+        case self.paperButton:
+            throwDown(RPS.Paper)
+            
+        case self.scissorsButton:
+            throwDown(RPS.Scissors)
+            
+        default:
+            assert(false, "An unknown button is invoking makeYourMove()")
         }
-        
     }
     
-    private func getUserShape(sender: UIButton) -> rockPaperScissorResult {
+    func throwDown(playersMove: RPS)
+    {
+        let computersMove = RPS()
+        let match = RPSMatch(p1: playersMove, p2: computersMove)
         
-        let shape = sender.titleForState(.Normal)!
-        return rockPaperScissorResult(rawValue: shape)!
+        // Add match to the history
+        history.append(match)
         
+        // Get the Storyboard and ResultViewController
+        let storyboard = UIStoryboard (name: "Main", bundle: nil)
+        let resultVC = storyboard.instantiateViewControllerWithIdentifier("ResultsViewController") as! ResultsViewController
+        
+        // Communicate the match to the ResultViewController
+        resultVC.match = match
+        
+        self.presentViewController(resultVC, animated: true, completion: nil)
     }
-    
-    
+    @IBAction func showHistory(sender: AnyObject) {
+        
+        let storyboard = self.storyboard
+        let controller = storyboard?.instantiateViewControllerWithIdentifier("HistoryViewController")as! HistoryViewController
+        
+        controller.history = self.history
+        
+        self.presentViewController(controller, animated: true, completion: nil)
+    }
 }

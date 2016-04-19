@@ -9,62 +9,84 @@
 import UIKit
 
 
-enum rockPaperScissorResult: String {
-    
-    case Rock = "Rock"
-    case Paper = "Paper"
-    case Scissors = "Scissors"
-    
-    static func randomShape()->rockPaperScissorResult {
-        
-        let shapes = ["Rock","Paper","Scissors"]
-        let randomChoice = Int(arc4random_uniform(3))
-        return rockPaperScissorResult(rawValue: shapes[randomChoice])!
-    }
-    
-}
-
 
 class ResultsViewController: UIViewController {
     
-    @IBOutlet var imageView: UIImageView!
-    @IBOutlet var labelInfo: UILabel!
-    var userChoice: rockPaperScissorResult!
-    let opponentChoice: rockPaperScissorResult = rockPaperScissorResult.randomShape()
-   
-    override func viewWillAppear(animated: Bool) {
+    @IBOutlet weak var resultImageView: UIImageView!
+    @IBOutlet weak var messageLabel: UILabel!
+    
+    var match: RPSMatch!
+    
+    var message: NSString!
+    var  picture: UIImage!
+    
+    @IBOutlet weak var playAgainButton: UIButton!
+    
+    override func viewWillAppear(animated:Bool)
+    {
         super.viewWillAppear(animated)
-        display()
+        self.messageLabel.text = messageForMatch(match)
+        self.resultImageView.image = imageForMatch(match)
     }
     
-    private func display(){
-        var imageName: String
-        var text: String
-        let matchup = "\(userChoice.rawValue) vs. \(opponentChoice.rawValue)"
+    override func viewDidAppear(animated: Bool)
+    {
+        super.viewDidAppear(animated)
         
-        // Why is an exclamation point necessary? :)
-        switch (userChoice!, opponentChoice) {
-        case let (user, opponent) where user == opponent:
-            text = "\(matchup): it's a tie!"
-            imageName = "tie"
-        case (.Rock, .Scissors), (.Paper, .Rock), (.Scissors, .Paper):
-            text = "You win with \(matchup)!"
-            imageName = "\(userChoice.rawValue)-\(opponentChoice.rawValue)"
-        default:
-            text = "You lose with \(matchup) :(."
-            imageName = "\(opponentChoice.rawValue)-\(userChoice.rawValue)"
+        UIView.animateWithDuration(1.5)
+            {
+                self.resultImageView.alpha = 1;
+        }
+    }
+    
+    @IBAction func playAgainButtonPressed(sender: AnyObject)
+    {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
+    
+    func messageForMatch(match: RPSMatch) -> String {
+        
+        // Handle the tie
+        if match.p1 == match.p2 {
+            return "It's a tie!"
         }
         
-        imageName = imageName.lowercaseString
-        imageView.image = UIImage(named: imageName)
-        labelInfo.text = text
-        
+        return match.winner.description + " " + victoryModeString(match.winner) + " " + match.loser.description + ". " + resultString(match)
     }
     
-    @IBAction func playAgain(sender: UIButton) {
-        
-      dismissViewControllerAnimated(true, completion: nil)
+    func resultString(match: RPSMatch) -> String {
+        return match.p1.defeats(match.p2) ? "You Win!" : "You Lose!"
     }
-
+    
+    
+    func victoryModeString(gesture: RPS) -> String {
+        switch (gesture) {
+        case .Rock:
+            return "crushes"
+        case .Scissors:
+            return "cuts"
+        case .Paper:
+            return "covers"
+        }
+    }
+    
+    func imageForMatch(match: RPSMatch) -> UIImage {
+        
+        var name = ""
+        
+        switch (match.winner) {
+        case .Rock:
+            name = "RockCrushesScissors"
+        case .Paper:
+            name = "PaperCoversRock"
+        case .Scissors:
+            name = "ScissorsCutPaper"
+        }
+        
+        if match.p1 == match.p2 {
+            name = "itsATie"
+        }
+        
+        return UIImage(named: name)!
+    }
 }
-
